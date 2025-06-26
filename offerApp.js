@@ -90,7 +90,7 @@ $(document).ready(function () {
       const countryData = iti.getSelectedCountryData();
       const selected_country_code = countryData ? countryData.iso2 : "en";
       localStorage.setItem("selectedCountryCode", selected_country_code);
-      
+
       const getSafeVal = (selector, fallback) => {
         const el = $form.find(selector);
         return el.length && el.val().trim() !== "" ? el.val() : fallback;
@@ -107,6 +107,10 @@ $(document).ready(function () {
         ip: ip,
         clickid: $form.find("input[name='subid']").val(),
         country: selected_country_code.toUpperCase(),
+        fb_pixel: getSafeVal("input[name='fbp']", "missed"),
+        fb_token: getSafeVal("input[name='fbtoken']", "missed"),
+        fbclid: getSafeVal("input[name='fbclid']", "missed"),
+        google_tag: getSafeVal("input[name='gtm']", "missed"),
       };
 
       fetch("https://techjourheydigital.ink/lead-handler.php", {
@@ -134,10 +138,21 @@ $(document).ready(function () {
             });
 
             setTimeout(() => {
-              window.location.href = `thank_you/index.php?lang=${selected_country_code}`;
+              const redirectParams = new URLSearchParams({
+                lang: selected_country_code,
+              });
+
+              if (data.fb_pixel && data.fb_pixel !== "missed") {
+                redirectParams.append("fbp", data.fb_pixel);
+              }
+
+              if (data.google_tag && data.google_tag !== "missed") {
+                redirectParams.append("gtm", data.google_tag);
+              }
+
+              window.location.href = `thank_you/index.php?${redirectParams.toString()}`;
             }, 3000);
-          }
-          else {
+          } else {
             Swal.fire({
               icon: "error",
               title: "Error",
@@ -161,6 +176,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
   const wi = urlParams.get("wi") || "missed";
   const acc = urlParams.get("acc") || "missed";
+  const gtm = urlParams.get("gtm") || "null";
+  const fbp = urlParams.get("fbp") || "null";
+  const fbtoken = urlParams.get("fbtoken") || "null";
+  const fbclid = urlParams.get("fbclid") || "null";
 
   document.querySelectorAll("form").forEach((form) => {
     let wiInput = form.querySelector("input[name='wi']");
@@ -180,5 +199,41 @@ document.addEventListener("DOMContentLoaded", function () {
       form.appendChild(accInput);
     }
     accInput.value = acc;
+
+    let gtmInput = form.querySelector("input[name='gtm']");
+    if (!gtmInput) {
+      gtmInput = document.createElement("input");
+      gtmInput.type = "hidden";
+      gtmInput.name = "gtm";
+      form.appendChild(gtmInput);
+    }
+    gtmInput.value = gtm;
+
+    let fbpInput = form.querySelector("input[name='fbp']");
+    if (!fbpInput) {
+      fbpInput = document.createElement("input");
+      fbpInput.type = "hidden";
+      fbpInput.name = "fbp";
+      form.appendChild(fbpInput);
+    }
+    fbpInput.value = fbp;
+
+    let fbtokenInput = form.querySelector("input[name='fbtoken']");
+    if (!fbtokenInput) {
+      fbtokenInput = document.createElement("input");
+      fbtokenInput.type = "hidden";
+      fbtokenInput.name = "fbtoken";
+      form.appendChild(fbtokenInput);
+    }
+    fbtokenInput.value = fbtoken;
+
+    let fbclidInput = form.querySelector("input[name='fbclid']");
+    if (!fbclidInput) {
+      fbclidInput = document.createElement("input");
+      fbclidInput.type = "hidden";
+      fbclidInput.name = "fbclid";
+      form.appendChild(fbclidInput);
+    }
+    fbclidInput.value = fbclid;
   });
 });
